@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "yapom"
+version = "0.1.0"
+description = ""
+authors = ["sshukla90 <sshukla90@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+nornir = "^3.4.1"
+nornir-scrapli = "^2024.7.30"
+setuptools = "^75.3.0"
+pydotenv = "^0.0.7"
+python-dotenv = "^1.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
