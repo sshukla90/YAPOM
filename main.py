@@ -7,7 +7,9 @@ from pathlib import Path
 import os
 import importlib
 from dotenv import load_dotenv
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+import argparse
+import sys
 
 class Yapom:
     def __init__(
@@ -71,19 +73,24 @@ class Yapom:
             print(err)
 
     def save_output(self, hostname: str, command: str, output: str, timestamp: str) -> None:
-        device_dir = f"output/{self.site}/{timestamp}/{hostname}"
-        os.makedirs(device_dir, exist_ok=True)
-        
-        clean_command = command.replace(' ', '_').replace('/', '_').replace('|', '_')
-        filename = f"{clean_command}.txt"
-        
-        with open(f"{device_dir}/{filename}", "w") as f:
-            f.write(f"Command: {command}\n")
-            f.write("=" * 80 + "\n")
-            f.write(output)
-            f.write("\n" + "=" * 80 + "\n")
-        
-        self.output_counter += 1
+        try:
+            device_dir = f"output/{self.site}/{timestamp}/{hostname}"
+            os.makedirs(device_dir, exist_ok=True)
+            
+            # Use exact command for filename
+            filename = f"{command}.txt"
+            
+            with open(f"{device_dir}/{filename}", "w") as f:
+                f.write(f"Command: {command}\n")
+                f.write("=" * 80 + "\n")
+                f.write(output)
+                f.write("\n" + "=" * 80 + "\n")
+            
+            self.output_counter += 1
+            
+        except Exception as e:
+            print(f"Error saving output for {hostname}: {e}")
+            raise
 
     def execute_task(self, nr, timestamp: str) -> None:
         try:
@@ -113,30 +120,26 @@ class Yapom:
                                 commands=[command]
                             )
                             
-                            # Fixed result processing
                             for hostname, host_data in result.items():
                                 if host_data.failed:
                                     error_msg = f"Error executing command:\n{str(host_data.exception)}"
                                     self.save_output(
-                                        hostname=str(hostname),  # Convert hostname to string
+                                        hostname=str(hostname),
                                         command=command,
                                         output=error_msg,
                                         timestamp=timestamp
                                     )
                                 else:
-                                    # Handle the raw output properly
                                     command_output = host_data.result
                                     if isinstance(command_output, dict):
-                                        # If output is a dict, get the command result
                                         command_output = command_output.get(command, "No output")
                                     elif isinstance(command_output, list):
-                                        # If output is a list, get the first item
                                         command_output = command_output[0] if command_output else "No output"
                                     
                                     self.save_output(
-                                        hostname=str(hostname),  # Convert hostname to string
+                                        hostname=str(hostname),
                                         command=command,
-                                        output=str(command_output),  # Ensure output is string
+                                        output=str(command_output),
                                         timestamp=timestamp
                                     )
 
@@ -150,23 +153,129 @@ class Yapom:
         except Exception as e:
             print(f"Error executing tasks: {str(e)}")
 
-if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--site', help='Site name', required=False)
-    parser.add_argument('-r', '--role', help='Role of the devices', required=False)
-    parser.add_argument('-d', '--devices', nargs='+', help='Specific devices', required=False)
-    parser.add_argument('-p', '--platform', help='Device platform', required=False)
-    parser.add_argument('-t', '--task', help='Task to execute (use "all" for all tasks)', required=True)
-    
-    args = parser.parse_args()
+def validate_task(task: str) -> str:
+    """Validate if the task exists in mod.py"""
+    try:
+        mod = importlib.import_module('shared.services.mod')
+        available_tasks = getattr(mod, 'AVAILABLE_TASKS', {})
+        
+        if task.lower() == 'all':
+            return task
+        
+        if task not in available_tasks:
+            tasks_list = list(available_tasks.keys())
+            raise argparse.ArgumentTypeError(
+                f"Invalid task: {task}\nAvailable tasks: {', '.join(tasks_list)} or 'all'"
+            )
+        return task
+    except ModuleNotFoundError:
+        raise argparse.ArgumentTypeError("Could not load tasks from mod.py")
 
-    yapom_tasks = Yapom(
-        site=args.site,
-        role=args.role,
-        devices=args.devices,
-        platform=args.platform,
-        task=args.task
+def validate_site(site: str) -> str:
+    """Validate site name"""
+    valid_sites = {'AUS', 'IND', 'ALL'}  # Add your valid sites here
+    if site and site.upper() not in valid_sites:
+        raise argparse.ArgumentTypeError(
+            f"Invalid site. Available sites: {', '.join(valid_sites)}"
+        )
+    return site.upper() if site else site
+
+def validate_role(role: str) -> str:
+    """Validate role name"""
+    valid_roles = {'edge', 'ISP', 'ALL'}  # Add your valid roles here
+    if role and role.upper() not in valid_roles:
+        raise argparse.ArgumentTypeError(
+            f"Invalid role. Available roles: {', '.join(valid_roles)}"
+        )
+    return role.upper() if role else role
+
+def setup_argparse() -> argparse.ArgumentParser:
+    """Setup argument parser with improved help and validation"""
+    parser = argparse.ArgumentParser(
+        description='YAPOM - Network Device Command Management Tool',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  Run all tasks:
+    %(prog)s -t all
+  
+  Run specific task for specific devices:
+    %(prog)s -t basic_info -d device1 device2
+  
+  Run task for a specific site and role:
+    %(prog)s -t interface_info -s AUS -r edge
+    
+Available Tasks:
+  basic_info     - Basic device information
+  interface_info - Interface status and configuration
+  routing_info   - Routing protocols and tables
+  system_health  - System resource utilization
+  all            - Run all available tasks
+        """
     )
-    yapom_tasks.main()
+
+    parser.add_argument(
+        '-s', '--site',
+        help='Site name (e.g., AUS, IND, ALL)',
+        type=validate_site
+    )
+    
+    parser.add_argument(
+        '-r', '--role',
+        help='Role of the devices (e.g., edge, ISP, ALL)',
+        type=validate_role
+    )
+    
+    parser.add_argument(
+        '-d', '--devices',
+        nargs='+',
+        help='One or more device hostnames'
+    )
+    
+    parser.add_argument(
+        '-p', '--platform',
+        choices=['ios', 'nxos', 'iosxr'],
+        help='Device platform type'
+    )
+    
+    parser.add_argument(
+        '-t', '--task',
+        help='Task to execute (use "all" for all tasks)',
+        required=True,
+        type=validate_task
+    )
+
+    return parser
+
+def parse_args(args: Optional[List[str]] = None) -> argparse.Namespace:
+    """Parse and validate command line arguments"""
+    parser = setup_argparse()
+    parsed_args = parser.parse_args(args)
+    
+    if parsed_args.devices and (parsed_args.site or parsed_args.role):
+        parser.error("Cannot combine --devices with --site or --role")
+    
+    if bool(parsed_args.site) != bool(parsed_args.role):
+        parser.error("--site and --role must be used together")
+        
+    return parsed_args
+
+if __name__ == "__main__":
+    try:
+        args = parse_args()
+        
+        yapom_tasks = Yapom(
+            site=args.site,
+            role=args.role,
+            devices=args.devices,
+            platform=args.platform,
+            task=args.task
+        )
+        yapom_tasks.main()
+        
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
