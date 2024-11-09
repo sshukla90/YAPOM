@@ -1,37 +1,17 @@
----
 clab-vios-lab-vios1:
-        hostname: 192.168.106.3 # hostname or IP address. Has to be a hostname if you wish to filter on device names.
-        platform: ios # Used to define device's platform for connection purposes & filtering (ios, iosxr, nxos, eos).
-        groups: # Used to assign the connection options defined in the groups.yaml file.
-          - cisco_ios_xe
-        data: # role & site data used for the filtering purposes. Can be anything
-          role: edge # router, switch, spine, leaf etc
-          site: AUS
+    hostname: 192.168.106.5
+    platform: ios
+    groups:
+        - cisco_ios_xe
+    data:
+        role: edge
+        site: AUS
 
 clab-vios-lab-vios2:
-        hostname: 192.168.106.2
-        platform: ios
-        groups:
-          - cisco_ios_xe
-        data:
-          role: edge # router, switch, spine, leaf etc
-          site: IND
-
-
-# clab-vios-lab-vios3:
-#         hostname: 192.168.106.3 # hostname or IP address. Has to be a hostname if you wish to filter on device names.
-#         platform: ios # Used to define device's platform for connection purposes & filtering (ios, iosxr, nxos, eos).
-#         groups: # Used to assign the connection options defined in the groups.yaml file.
-#           - cisco_ios_xe
-#         data: # role & site data used for the filtering purposes. Can be anything
-#           role: edge # router, switch, spine, leaf etc
-#           site: AUS
-
-# clab-vios-lab-vios4:
-#         hostname: 192.168.106.2
-#         platform: ios
-#         groups:
-#           - cisco_ios_xe
-#         data:
-#           role: ISP # router, switch, spine, leaf etc
-#           site: IND
+    hostname: 192.168.106.4
+    platform: ios
+    groups:
+        - cisco_ios_xe
+    data:
+        role: ISP
+        site: IND

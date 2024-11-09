@@ -3,9 +3,9 @@ Command: show running-config
 Building configuration...
 
 
-Current configuration : 1957 bytes
+Current configuration : 1700 bytes
 !
-! Last configuration change at 12:44:28 UTC Fri Nov 1 2024 by cisco
+! Last configuration change at 06:53:09 UTC Sat Nov 9 2024
 !
 version 15.9
 service timestamps debug datetime msec
@@ -59,7 +59,7 @@ multilink bundle-name authenticated
 !
 !
 !
-username vrnetlab privilege 15 secret 9 $9$jDaGRWV/IGpjbf$3jOmuFQtogzJCtBAtpClzKvl45yUEUWjWvidxC32rAM
+username vrnetlab privilege 15 secret 9 $9$V6Jj8WrJ7h9Odv$fSzFP0E.rx3FD4vCfGCxuSq10rcNEl.w2KxlVYK4gSc
 username cisco privilege 15 password 0 cisco
 !
 redundancy
@@ -97,16 +97,6 @@ interface GigabitEthernet0/1
 interface GigabitEthernet0/1.12
  encapsulation dot1Q 12
  ip address 155.1.12.2 255.255.255.0
-!
-router ospf 1
- network 150.2.2.2 0.0.0.0 area 0
- network 155.0.0.0 0.0.0.255 area 0
- network 155.1.12.0 0.0.0.255 area 0
-!
-router bgp 65000
- bgp log-neighbor-changes
- neighbor 150.1.1.1 remote-as 65000
- neighbor 150.1.1.1 update-source Loopback0
 !
 ip forward-protocol nd
 !

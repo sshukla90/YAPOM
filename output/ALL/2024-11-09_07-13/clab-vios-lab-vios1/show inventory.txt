@@ -1,5 +1,5 @@
 Command: show inventory
 ================================================================================
-NAME: "IOSv", DESCR: "IOSv chassis, Hw Serial#: 9VCCCTAKXCS5IOH1WG0JV, Hw Revision: 1.0"
-PID: IOSv              , VID: 1.0, SN: 9VCCCTAKXCS5IOH1WG0JV
+NAME: "IOSv", DESCR: "IOSv chassis, Hw Serial#: 99IO9QEB4WGTSC23A3Z00, Hw Revision: 1.0"
+PID: IOSv              , VID: 1.0, SN: 99IO9QEB4WGTSC23A3Z00
 ================================================================================

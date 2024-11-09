@@ -1,0 +1,72 @@
+Command: show logging
+================================================================================
+Syslog logging: enabled (0 messages dropped, 3 messages rate-limited, 0 flushes, 0 overruns, xml disabled, filtering disabled)
+
+No Active Message Discriminator.
+
+
+
+No Inactive Message Discriminator.
+
+
+    Console logging: level debugging, 39 messages logged, xml disabled,
+                     filtering disabled
+    Monitor logging: level debugging, 0 messages logged, xml disabled,
+                     filtering disabled
+    Buffer logging:  level debugging, 39 messages logged, xml disabled,
+                    filtering disabled
+    Exception Logging: size (8192 bytes)
+    Count and timestamp logging messages: disabled
+    Persistent logging: disabled
+
+No active filter modules.
+
+    Trap logging: level informational, 43 message lines logged
+        Logging Source-Interface:       VRF Name:
+
+Log Buffer (8192 bytes):
+
+*Mar  1 00:00:00.423: %ATA-6-DEV_FOUND: device 0x1F0
+*Mar  1 00:00:08.247: %NVRAM-5-CONFIG_NVRAM_NOT_FOUND: NVRAM configuration 'flash:/nvram' could not be found on disk.
+*Nov  9 06:51:46.115: %C3600-3-NOMAC: Can't allocate MAC address for interface 0/0
+*Nov  9 06:51:46.142: %C3600-3-NOMAC: Can't allocate MAC address for interface 0/0
+*Nov  9 06:51:46.440: %C3600-3-NOMAC: Can't allocate MAC address for interface 0/0
+*Nov  9 06:51:47.617: %PA-3-PA_INIT_FAILED: Performance Agent failed to initialize (Missing Data License)
+*Nov  9 06:51:48.741: %PNP-6-PNP_DISCOVERY_STARTED: PnP Discovery started
+*Nov  9 06:51:48.742: %PNP-6-PNP_GOOD_UDI_UPDATE: Good UDI [PID:IOSv,VID:,SN:9AB6YSPX8SHJH9Y9ID1OX] identified via (platform-registry)
+*Nov  9 06:51:48.742: %PNP-6-PNP_CDP_UPDATE: Device UDI [PID:IOSv,VID:,SN:9AB6YSPX8SHJH9Y9ID1OX] identified for CDP
+*Nov  9 06:51:48.775: %LINK-3-UPDOWN: Interface GigabitEthernet0/0, changed state to up
+*Nov  9 06:51:48.776: %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to up
+*Nov  9 06:51:49.775: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/0, changed state to up
+*Nov  9 06:51:49.776: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up
+*Nov  9 06:52:34.308: %IP-5-WEBINST_KILL: Terminating DNS process
+*Nov  9 06:52:35.542: %LINK-5-CHANGED: Interface GigabitEthernet0/0, changed state to administratively down
+*Nov  9 06:52:35.543: %LINK-5-CHANGED: Interface GigabitEthernet0/1, changed state to administratively down
+*Nov  9 06:52:35.846: %SYS-5-RESTART: System restarted --
+Cisco IOS Software, IOSv Software (VIOS-ADVENTERPRISEK9-M), Version 15.9(3)M4, RELEASE SOFTWARE (fc3)
+Technical Support: http://www.cisco.com/techsupport
+Copyright (c) 1986-2021 by Cisco Systems, Inc.
+Compiled Wed 04-Aug-21 08:13 by mcpre
+*Nov  9 06:52:35.883: %CRYPTO-6-ISAKMP_ON_OFF: ISAKMP is OFF
+*Nov  9 06:52:35.883: %CRYPTO-6-GDOI_ON_OFF: GDOI is OFF
+*Nov  9 06:52:36.698: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/0, changed state to down
+*Nov  9 06:52:36.699: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to down
+*Nov  9 06:52:39.396: %PNP-6-PNP_BEST_UDI_UPDATE: Best UDI [PID:IOSv,VID:1.0,SN:9AB6YSPX8SHJH9Y9ID1OX] identified via (entity-mibs)
+*Nov  9 06:52:39.397: %PNP-6-PNP_SAVING_TECH_SUMMARY: Saving PnP tech summary (/pnp-tech/pnp-tech-discovery-summary)... Please wait. Do not interrupt.
+*Nov  9 06:52:57.472: %PNP-6-PNP_TECH_SUMMARY_SAVED_OK: PnP tech summary (/pnp-tech/pnp-tech-discovery-summary) saved successfully (elapsed time: 18 seconds).
+*Nov  9 06:52:57.472: %PNP-6-PNP_DISCOVERY_STOPPED: PnP Discovery stopped (Config Wizard)
+*Nov  9 06:52:58.506: %PLATFORM-5-SIGNATURE_VERIFIED: Image 'flash0:/vios-adventerprisek9-m' passed code signing verification
+*Nov  9 06:53:04.122: %SSH-5-ENABLED: SSH 1.99 has been enabled
+*Nov  9 06:53:04.899: %LINK-3-UPDOWN: Interface GigabitEthernet0/0, changed state to up
+*Nov  9 06:53:05.899: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/0, changed state to up
+*Nov  9 06:53:06.171: %AAAA-4-CLI_DEPRECATED: WARNING: Command has been added to the configuration using a type 0 password. However, type 0 passwords will soon be deprecated. Migrate to a supported password type
+*Nov  9 06:53:07.548: %LINEPROTO-5-UPDOWN: Line protocol on Interface Loopback0, changed state to up
+*Nov  9 06:53:07.971: %SSH-5-DISABLED: SSH 2.0 has been disabled
+*Nov  9 06:53:08.553: %SSH-5-ENABLED: SSH 2.0 has been enabled
+*Nov  9 06:53:08.964: %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to up
+*Nov  9 06:53:09.303: %SYS-5-CONFIG_I: Configured from console by console
+*Nov  9 06:53:09.964: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up
+*Nov  9 06:53:10.407: %GRUB-5-CONFIG_WRITING: GRUB configuration is being updated on disk. Please wait...
+*Nov  9 06:53:11.068: %GRUB-5-CONFIG_WRITTEN: GRUB configuration was written to disk successfully.
+*Nov  9 07:00:32.205: %SSH-3-PACK_SND_FAIL: Packet send failed
+================================================================================

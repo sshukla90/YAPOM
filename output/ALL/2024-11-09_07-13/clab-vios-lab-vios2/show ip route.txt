@@ -12,11 +12,9 @@ Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP
 
 Gateway of last resort is not set
 
-      150.1.0.0/32 is subnetted, 1 subnets
-C        150.1.1.1 is directly connected, Loopback0
       150.2.0.0/32 is subnetted, 1 subnets
-O        150.2.2.2 [110/2] via 155.1.12.2, 00:58:51, GigabitEthernet0/1.12
+C        150.2.2.2 is directly connected, Loopback0
       155.1.0.0/16 is variably subnetted, 2 subnets, 2 masks
 C        155.1.12.0/24 is directly connected, GigabitEthernet0/1.12
-L        155.1.12.1/32 is directly connected, GigabitEthernet0/1.12
+L        155.1.12.2/32 is directly connected, GigabitEthernet0/1.12
 ================================================================================
