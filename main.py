@@ -28,24 +28,15 @@ class Yapom:
         self.output_counter = 0
 
     def verify_connectivity(self, nr):
-        """Verify connectivity to all devices"""
+        """Verify connectivity to all devices using platform-agnostic approach"""
         print("\nVerifying device connectivity...")
         print("=" * 50)
         
-        # Use appropriate command based on platform
-        results = {}
-        for hostname, host in nr.inventory.hosts.items():
-            platform = host.platform.lower()
-            if platform in ['ios', 'nxos', 'eos']:
-                command = "show version | include Version"
-            elif platform == 'junos':
-                command = "show version | match Junos:"
-            else:
-                print(f"Warning: Unknown platform {platform} for host {hostname}")
-                command = "show version"
-                
-            result = nr.filter(name=hostname).run(task=send_command, command=command)
-            results.update(result)
+        # Single command execution for all devices
+        results = nr.run(
+            task=send_command,
+            command="show version"
+        )
         
         accessible = []
         inaccessible = []
@@ -57,8 +48,10 @@ class Yapom:
                 print(f"  Error: {str(result.exception)}")
                 inaccessible.append(hostname)
             else:
+                # Extract version info based on platform
+                version_info = result.result.splitlines()[0] if result.result else "Version info not found"
                 print(f"✓ {hostname} ({device.hostname})")
-                print(f"  {result.result.strip()}")
+                print(f"  {version_info.strip()}")
                 accessible.append(hostname)
         
         print("\nConnectivity Summary")
@@ -170,39 +163,49 @@ class Yapom:
             nr.inventory.defaults.username = self.login_user
             nr.inventory.defaults.password = self.login_password
 
-        if self.devices is None and (self.site is None or self.role is None):
-            print("Please specify the targeted devices or filter groups of devices by site and role")
-            exit()
-
-        elif self.devices:
+        # Set site and create output directory
+        if self.devices:
             self.site = "ALL"
-            self.mkdir_now(timestamp=timestamp)
+        elif not self.site:
+            print("Error: Site parameter is required when not specifying devices")
+            exit(1)
+        
+        self.mkdir_now(timestamp=timestamp)
+
+        # Apply filters
+        if self.devices:
             self.devices = [device.upper() for device in self.devices]
             nr = nr.filter(F(hostname__any=self.devices))
-
-        elif self.site and self.role:
-            self.site = self.site.upper()
-            self.role = self.role.upper()
-            self.mkdir_now(timestamp=timestamp)
-
+        else:  # Using site/role filtering
             if self.platform:
                 nr = nr.filter(platform=self.platform.lower())
-
-            if self.site != "ALL" and self.role != "ALL":
-                nr = nr.filter(F(data__site=self.site) & F(data__role=self.role))
-            elif self.site != "ALL":
+            
+            # Apply site filter
+            if self.site != "ALL":
                 nr = nr.filter(data__site=self.site)
-            elif self.role != "ALL":
+            
+            # Apply role filter if specified
+            if self.role and self.role != "ALL":
                 nr = nr.filter(data__role=self.role)
 
-        print(f"Number of Targeted Hosts: {len(nr.inventory.hosts)}.\n")
+        # Show selected devices
+        print(f"\nSelected Devices:")
+        print("=" * 50)
+        for host in nr.inventory.hosts.values():
+            print(f"- {host.name} ({host.hostname})")
+        print(f"\nNumber of Targeted Hosts: {len(nr.inventory.hosts)}.\n")
         
-        # Verify connectivity first
+        if len(nr.inventory.hosts) == 0:
+            print("No devices matched the specified criteria. Exiting.")
+            exit(1)
+
+        # Verify connectivity
         nr = self.verify_connectivity(nr)
         if len(nr.inventory.hosts) == 0:
             print("No devices are accessible. Exiting.")
-            exit()
+            exit(1)
 
+        # Execute tasks
         if self.task:
             self.execute_task(nr, timestamp)
 
@@ -223,33 +226,76 @@ if __name__ == "__main__":
         description='YAPOM - Yet Another Python Output Manager',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
+Examples:
+  1. Run all tasks for all devices:
+     %(prog)s -t all -s ALL -pu admin
+
+  2. Run specific task for all devices:
+     %(prog)s -t basic_info -s ALL -pu admin
+
+  3. Run task for specific devices:
+     %(prog)s -t basic_info -d device1 device2 -pu admin
+
+  4. Run task for specific site (all roles):
+     %(prog)s -t basic_info -s NYC -pu admin
+
+  5. Run task for specific site and role:
+     %(prog)s -t basic_info -s NYC -r edge -pu admin
+
 Available Tasks:
   {', '.join(AVAILABLE_TASKS)}
   all - Run all tasks
 
 Supported Platforms:
   {', '.join(VENDOR_COMMANDS.keys())}
-
-Examples:
-  Run all tasks:
-    %(prog)s -t all -pu admin
-  
-  Run specific task for specific devices:
-    %(prog)s -t basic_info -d device1 device2 -pu admin
-  
-  Run task for a specific site and role:
-    %(prog)s -t interface_info -s AUS -r edge -pu admin
         """
     )
     
-    parser.add_argument('-s', '--site', help='Site name', required=False)
-    parser.add_argument('-r', '--role', help='Role of the devices', required=False)
-    parser.add_argument('-d', '--devices', nargs='+', help='Specific devices', required=False)
-    parser.add_argument('-p', '--platform', choices=list(VENDOR_COMMANDS.keys()), help='Device platform', required=False)
-    parser.add_argument('-pu', '--login_user', help='Login username', required=True)
-    parser.add_argument('-t', '--task', help='Task to execute', required=True)
+    # Required arguments
+    parser.add_argument('-t', '--task', 
+                       help='Task to execute', 
+                       required=True,
+                       choices=list(AVAILABLE_TASKS) + ['all'])
+    
+    parser.add_argument('-pu', '--login_user', 
+                       help='Login username', 
+                       required=True)
+
+    # Device targeting group (mutually exclusive)
+    device_group = parser.add_mutually_exclusive_group()
+    
+    device_group.add_argument('-d', '--devices', 
+                            nargs='+', 
+                            help='Specific devices')
+    
+    device_group.add_argument('-s', '--site', 
+                            help='Site name (use ALL for all sites)')
+    
+    # Optional arguments
+    parser.add_argument('-r', '--role', 
+                       help='Role filter (only used with -s)')
+    
+    parser.add_argument('-p', '--platform', 
+                       choices=list(VENDOR_COMMANDS.keys()), 
+                       help='Device platform filter')
     
     args = parser.parse_args()
+
+    # Validate argument combinations
+    if not args.devices and not args.site:
+        parser.error("Either -d (devices) or -s (site) must be specified")
+
+    if args.devices and (args.site or args.role):
+        parser.error("Cannot combine -d with -s or -r")
+
+    if args.role and not args.site:
+        parser.error("-r (role) requires -s (site)")
+
+    # Convert to upper case where needed
+    if args.site:
+        args.site = args.site.upper()
+    if args.role:
+        args.role = args.role.upper()
 
     yapom_tasks = Yapom(
         site=args.site,

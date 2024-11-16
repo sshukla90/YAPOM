@@ -91,7 +91,7 @@ VENDOR_COMMANDS = {
 }
 
 # List of available tasks
-AVAILABLE_TASKS = list(VENDOR_COMMANDS["ios"].keys())  # Using ios as reference since tasks are same
+AVAILABLE_TASKS = list(VENDOR_COMMANDS["ios"].keys())
 
 def get_commands_for_task(task_name: str, platform: str) -> list:
     """Get commands for a specific task and platform"""
