@@ -5,13 +5,13 @@ clab-vios-lab-vios1:
         - cisco_ios_xe
     data:
         role: edge
-        site: AUS
+        site: NYC
 
 clab-vios-lab-vios2:
-    hostname: 192.168.106.24
+    hostname: 192.168.106.4
     platform: ios
     groups:
         - cisco_ios_xe
     data:
         role: ISP
-        site: IND
+        site: NYC

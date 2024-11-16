@@ -6,6 +6,8 @@ from pathlib import Path
 import getpass
 import argparse
 import os
+from dotenv import load_dotenv
+import json
 import importlib
 from shared.services.mod import get_commands_for_task, AVAILABLE_TASKS, VENDOR_COMMANDS
 
@@ -27,8 +29,10 @@ class Yapom:
         self.task = task
         self.output_counter = 0
 
+        load_dotenv()
+        self.login_password = os.getenv('NETWORK_PASSWORD')
+
     def verify_connectivity(self, nr):
-        """Verify connectivity to all devices using platform-agnostic approach"""
         print("\nVerifying device connectivity...")
         print("=" * 50)
         
@@ -48,7 +52,6 @@ class Yapom:
                 print(f"  Error: {str(result.exception)}")
                 inaccessible.append(hostname)
             else:
-                # Extract version info based on platform
                 version_info = result.result.splitlines()[0] if result.result else "Version info not found"
                 print(f"✓ {hostname} ({device.hostname})")
                 print(f"  {version_info.strip()}")
@@ -69,16 +72,23 @@ class Yapom:
         
         return nr.filter(filter_func=lambda h: h.name in accessible)
 
-    def save_output(self, hostname: str, command: str, output: str, timestamp: str) -> None:
-        """Save command output to file"""
+    def save_output(self, hostname: str, command: str, output: str, timestamp: str, task_name: str) -> None:
         try:
             device_dir = f"output/{self.site}/{timestamp}/{hostname}"
             os.makedirs(device_dir, exist_ok=True)
             
-            filename = f"{command}.txt"
-            
-            with open(f"{device_dir}/{filename}", "w") as f:
+            # Save to individual command file
+            command_filename = f"{command}.txt"
+            with open(f"{device_dir}/{command_filename}", "w") as f:
                 f.write(f"Command: {command}\n")
+                f.write("=" * 80 + "\n")
+                f.write(output)
+                f.write("\n" + "=" * 80 + "\n")
+            
+            # Save to consolidated task file
+            task_filename = f"{task_name}_output.txt"
+            with open(f"{device_dir}/{task_filename}", "a") as f:
+                f.write(f"\nCommand: {command}\n")
                 f.write("=" * 80 + "\n")
                 f.write(output)
                 f.write("\n" + "=" * 80 + "\n")
@@ -88,7 +98,7 @@ class Yapom:
         except Exception as e:
             print(f"Error saving output for {hostname}: {e}")
 
-    def execute_commands(self, nr, commands: list, timestamp: str):
+    def execute_commands(self, nr, commands: list, timestamp: str, task_name: str):
         """Execute a list of commands on devices"""
         for command in commands:
             print(f"Running command: {command}")
@@ -102,7 +112,8 @@ class Yapom:
                             hostname=str(hostname),
                             command=command,
                             output=error_msg,
-                            timestamp=timestamp
+                            timestamp=timestamp,
+                            task_name=task_name
                         )
                     else:
                         command_output = host_data.result
@@ -115,7 +126,8 @@ class Yapom:
                             hostname=str(hostname),
                             command=command,
                             output=str(command_output),
-                            timestamp=timestamp
+                            timestamp=timestamp,
+                            task_name=task_name
                         )
                 except Exception as e:
                     print(f"Error processing result for {hostname}: {str(e)}")
@@ -142,7 +154,7 @@ class Yapom:
                     try:
                         commands = get_commands_for_task(task_name, platform)
                         print(f"\nExecuting task: {task_name}")
-                        self.execute_commands(platform_hosts, commands, timestamp)
+                        self.execute_commands(platform_hosts, commands, timestamp, task_name)
                     except ValueError as e:
                         print(f"Skipping task {task_name} for platform {platform}: {str(e)}")
                     except Exception as e:
@@ -159,45 +171,57 @@ class Yapom:
         )
         
         if self.login_user:
-            self.login_password = getpass.getpass(prompt="Login Password: ")
+            if not self.login_password:
+                print("Error: NETWORK_PASSWORD not found in environment variables")
+                exit(1)
             nr.inventory.defaults.username = self.login_user
             nr.inventory.defaults.password = self.login_password
 
-        # Set site and create output directory
+        # Set site and check for matching devices
         if self.devices:
             self.site = "ALL"
         elif not self.site:
             print("Error: Site parameter is required when not specifying devices")
             exit(1)
-        
-        self.mkdir_now(timestamp=timestamp)
 
-        # Apply filters
+        # Apply filters using case-insensitive matching
         if self.devices:
-            self.devices = [device.upper() for device in self.devices]
-            nr = nr.filter(F(hostname__any=self.devices))
-        else:  # Using site/role filtering
+            device_names = [device.lower() for device in self.devices]
+            nr = nr.filter(filter_func=lambda h: h.name.lower() in device_names)
+        else:
             if self.platform:
                 nr = nr.filter(platform=self.platform.lower())
             
-            # Apply site filter
             if self.site != "ALL":
-                nr = nr.filter(data__site=self.site)
+                nr = nr.filter(filter_func=lambda h: h.data.get('site', '').upper() == self.site)
             
-            # Apply role filter if specified
             if self.role and self.role != "ALL":
-                nr = nr.filter(data__role=self.role)
+                nr = nr.filter(filter_func=lambda h: h.data.get('role', '').upper() == self.role)
+
+        # Check if we have matching devices
+        if len(nr.inventory.hosts) == 0:
+            print(f"\nNo devices found matching the criteria:")
+            print(f"Site: {self.site}")
+            if self.role:
+                print(f"Role: {self.role}")
+            if self.platform:
+                print(f"Platform: {self.platform}")
+            if self.devices:
+                print(f"Devices: {', '.join(self.devices)}")
+            exit(1)
+
+        # Create output directory after confirming we have matching devices
+        self.mkdir_now(timestamp=timestamp)
 
         # Show selected devices
         print(f"\nSelected Devices:")
         print("=" * 50)
         for host in nr.inventory.hosts.values():
             print(f"- {host.name} ({host.hostname})")
+            print(f"  Site: {host.data.get('site', 'N/A')}")
+            print(f"  Role: {host.data.get('role', 'N/A')}")
+            print(f"  Platform: {host.platform}")
         print(f"\nNumber of Targeted Hosts: {len(nr.inventory.hosts)}.\n")
-        
-        if len(nr.inventory.hosts) == 0:
-            print("No devices matched the specified criteria. Exiting.")
-            exit(1)
 
         # Verify connectivity
         nr = self.verify_connectivity(nr)
@@ -223,24 +247,24 @@ class Yapom:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='YAPOM - Yet Another Python Output Manager',
+        description='YAPOM - Yet Another Performance Optimization Module',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=f"""
 Examples:
   1. Run all tasks for all devices:
-     %(prog)s -t all -s ALL -pu admin
+     %(prog)s -t all -s ALL -pu cisco
 
   2. Run specific task for all devices:
-     %(prog)s -t basic_info -s ALL -pu admin
+     %(prog)s -t basic_info -s ALL -pu cisco
 
   3. Run task for specific devices:
-     %(prog)s -t basic_info -d device1 device2 -pu admin
+     %(prog)s -t basic_info -d device1 device2 -pu cisco
 
   4. Run task for specific site (all roles):
-     %(prog)s -t basic_info -s NYC -pu admin
+     %(prog)s -t basic_info -s NYC -pu cisco
 
   5. Run task for specific site and role:
-     %(prog)s -t basic_info -s NYC -r edge -pu admin
+     %(prog)s -t basic_info -s NYC -r edge -pu cisco
 
 Available Tasks:
   {', '.join(AVAILABLE_TASKS)}
@@ -258,8 +282,8 @@ Supported Platforms:
                        choices=list(AVAILABLE_TASKS) + ['all'])
     
     parser.add_argument('-pu', '--login_user', 
-                       help='Login username', 
-                       required=True)
+                       help='Login username',
+                       default='cisco')
 
     # Device targeting group (mutually exclusive)
     device_group = parser.add_mutually_exclusive_group()

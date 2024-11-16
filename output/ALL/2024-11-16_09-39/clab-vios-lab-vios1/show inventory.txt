@@ -1,5 +1,0 @@
-Command: show inventory
-================================================================================
-NAME: "IOSv", DESCR: "IOSv chassis, Hw Serial#: 9NKJBRFG60MUQA82TLU21, Hw Revision: 1.0"
-PID: IOSv              , VID: 1.0, SN: 9NKJBRFG60MUQA82TLU21
-================================================================================

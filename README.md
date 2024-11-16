@@ -1,4 +1,4 @@
-# YAPOM (Yet Another performance optimization module)
+# YAPOM (Yet Another Performance Optimization Module)
 
 A Python tool for multi-vendor network device command management using Nornir and Scrapli.
 
@@ -15,7 +15,7 @@ source .venv/bin/activate  # Linux/Mac
 .venv\Scripts\activate     # Windows
 
 # Install dependencies using Poetry
-pip install < lib name > 
+poetry install
 ```
 
 ## Configuration
@@ -56,12 +56,12 @@ device2:
 
 ### Command Structure
 ```bash
-python main.py -t  -pu  [-d  | -s ] [-r ] [-p ]
+python main.py -t <task> -pu <username> [-d <devices...> | -s <site>] [-r <role>] [-p <platform>]
 ```
 
 ### Required Arguments
 - `-t, --task`: Task to execute (use 'all' for all tasks)
-- `-pu, --login_user`: Login username
+- `-pu, --login_user`: Login username (default: cisco)
 
 ### Device Selection (One Required)
 - `-d, --devices`: List of specific devices
@@ -75,32 +75,32 @@ python main.py -t  -pu  [-d  | -s ] [-r ] [-p ]
 
 1. Run all tasks for all devices:
 ```bash
-python main.py -t all -s ALL -pu admin
+python main.py -t all -s ALL -pu cisco
 ```
 
 2. Run specific task for all devices:
 ```bash
-python main.py -t basic_info -s ALL -pu admin
+python main.py -t basic_info -s ALL -pu cisco
 ```
 
 3. Run task for specific devices:
 ```bash
-python main.py -t basic_info -d device1 device2 -pu admin
+python main.py -t basic_info -d device1 device2 -pu cisco
 ```
 
 4. Run task for specific site (all roles):
 ```bash
-python main.py -t basic_info -s NYC -pu admin
+python main.py -t basic_info -s NYC -pu cisco
 ```
 
 5. Run task for specific site and role:
 ```bash
-python main.py -t basic_info -s NYC -r edge -pu admin
+python main.py -t basic_info -s NYC -r edge -pu cisco
 ```
 
 6. Run task for specific platform:
 ```bash
-python main.py -t basic_info -s ALL -p ios -pu admin
+python main.py -t basic_info -s ALL -p ios -pu cisco
 ```
 
 ## Available Tasks and Commands
@@ -182,6 +182,22 @@ eos:
   - show logging last 100
 ```
 
+### Advanced Analysis Tasks
+```yaml
+# Complex analysis tasks using workers
+tshoot_bgp:
+  - BGP neighbor analysis
+  - Route verification
+  - State monitoring
+  - Prefix analysis
+
+analyze_ospf:
+  - Neighbor state verification
+  - Interface analysis
+  - Route table verification
+  - Area configuration check
+```
+
 ## Output Structure
 
 ```
@@ -196,6 +212,9 @@ output/
             ├── show_version.txt
             ├── show_interfaces.txt
             └── ...
+        └── worker_results/           # For advanced analysis tasks
+            ├── analysis_results.json
+            └── analysis_summary.txt
 ```
 
 ## Features
@@ -210,6 +229,7 @@ output/
    - Predefined command sets
    - Platform-specific commands
    - Multiple tasks in single run
+   - Advanced analysis workers
 
 3. Flexible Device Selection:
    - By specific devices
@@ -221,11 +241,39 @@ output/
    - Timestamp-based directories
    - Device-specific folders
    - Command-specific files
+   - JSON results for analysis tasks
 
 5. Error Handling:
    - Connectivity verification
    - Command execution validation
    - Detailed error reporting
+   - Graceful failure handling
+
+6. Advanced Analysis:
+   - Protocol-specific troubleshooting
+   - Automated problem detection
+   - Detailed analysis reports
+   - JSON output for automation
+
+## Project Structure
+```
+yapom/
+├── main.py              # Main script
+├── shared/
+│   ├── nornir_data/    # Nornir configuration
+│   └── services/
+│       └── mod.py      # Task definitions
+├── workers/            # Advanced analysis modules
+│   ├── bgp_analysis.py
+│   └── ospf_analysis.py
+└── output/            # Command outputs
+```
+
+## Dependencies
+
+- nornir
+- nornir-scrapli
+- scrapli
 
 ## Contributing
 
@@ -234,3 +282,7 @@ output/
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
