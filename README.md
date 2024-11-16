@@ -34,7 +34,7 @@ pip install <lib name>
    ```
 
 3. Example hosts.yaml configuration:
-   ```yaml
+   ```
    device1:
      hostname: 192.168.1.10
      platform: ios
