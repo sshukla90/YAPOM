@@ -1,8 +1,0 @@
-Command: show ip interface brief
-================================================================================
-Interface                  IP-Address      OK? Method Status                Protocol
-GigabitEthernet0/0         10.0.0.15       YES manual up                    up
-GigabitEthernet0/1         unassigned      YES unset  up                    up
-GigabitEthernet0/1.12      155.1.12.2      YES manual up                    up
-Loopback0                  150.2.2.2       YES manual up                    up
-================================================================================

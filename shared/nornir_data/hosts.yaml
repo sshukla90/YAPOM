@@ -1,5 +1,5 @@
 clab-vios-lab-vios1:
-    hostname: 192.168.106.5
+    hostname: 192.168.106.3
     platform: ios
     groups:
         - cisco_ios_xe
